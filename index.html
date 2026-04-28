@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apuntes de Derecho — Workspace (Firebase)</title>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDfPfPCVIwOR0T-_2E_UUaPYyZEU3RB5-4",
+            authDomain: "repositorio-juridico-88c93.firebaseapp.com",
+            databaseURL: "https://repositorio-juridico-88c93-default-rtdb.firebaseio.com",
+            projectId: "repositorio-juridico-88c93",
+            storageBucket: "repositorio-juridico-88c93.firebasestorage.app",
+            messagingSenderId: "648597577090",
+            appId: "1:648597577090:web:77cf8def27804fdbaac39b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        window.db = db; // Exponer para uso global
+    </script>
+    <style>
+        :root {
+            --bg: #0a0a0c;
+            --sidebar-bg: #101114;
+            --surface: #1a1a1f;
+            --surface-hover: #222228;
+            --text: #e4e5e7;
+            --text-secondary: #a0a3ab;
+            --text-tertiary: #6b6f78;
+            --border: #2a2a32;
+            --accent: #3b82f6;
+            --accent-light: rgba(59, 130, 246, 0.15);
+            --accent-hover: #2563eb;
+            --danger: #ef4444;
+            --danger-light: rgba(239, 68, 68, 0.12);
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+            --radius-sm: 6px;
+            --radius: 10px;
+            --radius-lg: 14px;
+            --sidebar-width: 300px;
+            --transition: 0.18s cubic-bezier(0.4,0,0.2,1);
+            --font-sans: 'Inter', 'Segoe UI', 'SF Pro Display', system-ui, sans-serif;
+            --font-serif: 'Georgia', 'Times New Roman', 'Noto Serif', serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            --reading-max: 780px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            min-width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            box-shadow: var(--shadow-sm);
+            user-select: none;
+        }
+        .sidebar-header {
+            padding: 20px 20px 10px;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 4px;
+        }
+        .sidebar-header .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 4px;
+        }
+        .sidebar-header .logo svg {
+            width: 26px; height: 26px; flex-shrink: 0; color: var(--accent);
+        }
+        .sidebar-header .subtitle {
+            font-size: 0.78rem; color: var(--text-tertiary);
+        }
+        .search-wrap {
+            padding: 8px 16px 14px; flex-shrink: 0;
+        }
+        .search-input {
+            width: 100%;
+            padding: 9px 13px 9px 34px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: var(--surface);
+            color: var(--text);
+            outline: none;
+            transition: var(--transition);
+            font-family: var(--font-sans);
+        }
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+        .search-input::placeholder { color: var(--text-tertiary); }
+        .search-wrap { position: relative; }
+        .search-icon {
+            position: absolute;
+            left: 28px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+            pointer-events: none;
+        }
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 8px 12px;
+            scroll-behavior: smooth;
+        }
+        .sidebar-nav::-webkit-scrollbar { width: 4px; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background: #3a3a44; border-radius: 8px; }
+        .sidebar-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .btn-add-materia {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.84rem;
+            transition: var(--transition);
+            font-family: var(--font-sans);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-add-materia:hover {
+            background: var(--accent-hover);
+            box-shadow: var(--shadow-md);
+        }
+        .btn-add-materia:active { transform: scale(0.97); }
+
+        .materia-group { margin-bottom: 2px; }
+        .materia-header {
+            display: flex;
+            align-items: center;
+            padding: 9px 10px 9px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            gap: 7px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text);
+        }
+        .materia-header:hover { background: var(--surface-hover); }
+        .materia-header.active-materia {
+            background: rgba(59,130,246,0.08);
+            color: var(--accent);
+        }
+        .materia-header .chevron {
+            width: 18px; height: 18px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+            font-size: 0.6rem;
+            color: var(--text-tertiary);
+        }
+        .materia-header.expanded .chevron { transform: rotate(90deg); }
+        .materia-header .materia-name {
+            flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+        }
+        .materia-header .materia-count {
+            font-size: 0.7rem;
+            color: var(--text-tertiary);
+            background: rgba(255,255,255,0.06);
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+        .materia-actions {
+            display: flex; gap: 2px; opacity: 0; transition: opacity 0.15s; flex-shrink: 0;
+        }
+        .materia-header:hover .materia-actions { opacity: 1; }
+        .btn-icon-sm {
+            width: 26px; height: 26px;
+            border: none;
+            background: transparent;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+        .btn-icon-sm:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+        .btn-icon-sm.danger:hover { background: var(--danger-light); color: var(--danger); }
+
+        .topic-tree {
+            margin-left: 16px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.25s;
+            opacity: 0;
+            max-height: 0;
+        }
+        .topic-tree.open {
+            opacity: 1;
+            max-height: 6000px;
+        }
+        .topic-node {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            gap: 5px;
+            position: relative;
+        }
+        .topic-node:hover { background: var(--surface-hover); color: var(--text); }
+        .topic-node.active {
+            background: var(--accent-light);
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .topic-node .node-dot {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: var(--text-tertiary); flex-shrink: 0;
+        }
+        .topic-node.active .node-dot { background: var(--accent); width: 6px; height: 6px; }
+        .topic-node .node-title {
+            flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+        }
+        .topic-node .node-actions {
+            display: flex; gap: 2px; opacity: 0;
+        }
+        .topic-node:hover .node-actions { opacity: 1; }
+        .add-subtopic-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px 4px 20px;
+            font-size: 0.72rem;
+            color: var(--accent);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: var(--font-sans);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+        .add-subtopic-btn:hover { background: rgba(59,130,246,0.1); }
+        .add-subtopic-btn.disabled {
+            color: var(--text-tertiary);
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .main-panel {
+            flex: 1;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+            overflow: hidden;
+        }
+        .main-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            flex-shrink: 0;
+            min-height: 56px;
+            gap: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+        .breadcrumb {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            font-weight: 500;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .breadcrumb strong { color: var(--text); font-weight: 600; }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 7px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid transparent;
+            transition: var(--transition);
+            font-family: var(--font-sans);
+            display: inline-flex; align-items: center; gap: 5px;
+            white-space: nowrap;
+        }
+        .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-outline { background: transparent; color: var(--text); border-color: var(--border); }
+        .btn-outline:hover { background: var(--surface-hover); }
+        .btn-danger-outline { background: transparent; color: var(--danger); border-color: var(--danger); }
+        .btn-danger-outline:hover { background: var(--danger-light); }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px 32px;
+            scroll-behavior: smooth;
+        }
+        .main-content::-webkit-scrollbar { width: 6px; }
+        .main-content::-webkit-scrollbar-thumb { background: #3a3a44; border-radius: 8px; }
+
+        .welcome-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            color: var(--text-tertiary);
+            gap: 8px;
+        }
+        .welcome-state .welcome-icon { font-size: 3.5rem; opacity: 0.6; }
+        .welcome-state h3 { font-size: 1.2rem; color: var(--text-secondary); }
+        .welcome-state p { font-size: 0.875rem; max-width: 360px; line-height: 1.5; }
+
+        .reading-container, .editor-container {
+            max-width: var(--reading-max);
+            margin: 0 auto;
+            width: 100%;
+        }
+        .reading-container .tema-title-display {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #f0f0f2;
+            line-height: 1.25;
+        }
+        .tema-meta { font-size: 0.75rem; color: var(--text-tertiary); margin-bottom: 24px; }
+        .tema-body-rendered {
+            font-family: var(--font-serif);
+            font-size: 1rem;
+            line-height: 1.8;
+            color: #d1d4d8;
+        }
+        .tema-body-rendered h1 { font-size: 1.8rem; margin: 1.2em 0 0.5em; color: #f0f0f2; }
+        .tema-body-rendered h2 { font-size: 1.45rem; margin: 1.2em 0 0.4em; color: #e2e4e9; }
+        .tema-body-rendered h3 { font-size: 1.15rem; margin: 1.1em 0 0.3em; color: #d9dbe0; }
+        .tema-body-rendered p { margin-bottom: 1.1em; }
+        .tema-body-rendered strong { font-weight: 700; color: #ffffff; }
+        .tema-body-rendered em { font-style: italic; color: #e0e0e0; }
+        .tema-body-rendered a { color: var(--accent); text-decoration: underline; }
+        .tema-body-rendered ul, .tema-body-rendered ol { margin: 0.8em 0 1.1em 1.8em; }
+        .tema-body-rendered li { margin-bottom: 0.3em; }
+        .tema-body-rendered code {
+            background: rgba(255,255,255,0.07);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.9em;
+        }
+        .tema-body-rendered pre {
+            background: #111318;
+            padding: 14px 18px;
+            border-radius: var(--radius-sm);
+            overflow-x: auto;
+            margin: 1em 0;
+            border: 1px solid var(--border);
+        }
+        .tema-body-rendered pre code { background: transparent; padding: 0; }
+        .tema-body-rendered table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
+            font-size: 0.9em;
+        }
+        .tema-body-rendered th, .tema-body-rendered td {
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .tema-body-rendered th { background: rgba(255,255,255,0.04); font-weight: 600; }
+        .tema-body-rendered hr { border: none; border-top: 1px solid var(--border); margin: 1.5em 0; }
+        .aside-block {
+            background: rgba(59,130,246,0.06);
+            border-left: 4px solid var(--accent);
+            padding: 12px 16px;
+            margin: 1em 0;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            color: #cbd5e0;
+        }
+        .aside-block .aside-badge {
+            font-family: var(--font-sans);
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--accent);
+            background: rgba(59,130,246,0.15);
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-bottom: 8px;
+        }
+
+        .editor-container label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .editor-container input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.8px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: var(--font-sans);
+            background: var(--surface);
+            color: var(--text);
+            outline: none;
+            transition: var(--transition);
+            margin-bottom: 18px;
+        }
+        .editor-container input[type="text"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+        .editor-textarea {
+            width: 100%;
+            min-height: 380px;
+            padding: 16px;
+            border: 1.8px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: var(--font-mono);
+            background: #0f0f14;
+            color: #e4e4e8;
+            outline: none;
+            resize: vertical;
+            line-height: 1.7;
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+        .editor-textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+        .formatting-help {
+            font-size: 0.72rem;
+            color: var(--text-tertiary);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+        .formatting-help span {
+            background: rgba(255,255,255,0.06);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+        }
+        .editor-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            background: #2d2d36;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            z-index: 999;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            box-shadow: var(--shadow-md);
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 260px; min-width: 260px; }
+            .main-content { padding: 20px 16px; }
+        }
+        @media (max-width: 560px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; min-width: 100%; height: auto; max-height: 45vh; border-bottom: 1px solid var(--border); }
+            .main-panel { flex: 1; min-height: 55vh; }
+            .sidebar-nav { max-height: 200px; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+                Apuntes de Derecho
+            </div>
+            <div class="subtitle">Workspace jurídico</div>
+        </div>
+        <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="searchInput" placeholder="Buscar temas..." autocomplete="off">
+        </div>
+        <nav class="sidebar-nav" id="sidebarNav"></nav>
+        <div class="sidebar-footer">
+            <button class="btn-add-materia" id="btnAddMateria">＋ Añadir Nueva Materia</button>
+        </div>
+    </aside>
+
+    <main class="main-panel" id="mainPanel">
+        <div class="main-toolbar" id="mainToolbar">
+            <span class="breadcrumb" id="breadcrumb">Selecciona un tema para comenzar</span>
+            <div class="toolbar-actions" id="toolbarActions"></div>
+        </div>
+        <div class="main-content" id="mainContent"></div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script type="module">
+        import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        // La app ya fue inicializada en el script inline anterior
+        const db = getDatabase();
+
+        const sidebarNav = document.getElementById('sidebarNav');
+        const mainContent = document.getElementById('mainContent');
+        const breadcrumb = document.getElementById('breadcrumb');
+        const toolbarActions = document.getElementById('toolbarActions');
+        const searchInput = document.getElementById('searchInput');
+        const btnAddMateria = document.getElementById('btnAddMateria');
+        const toast = document.getElementById('toast');
+
+        const MAX_DEPTH = 4;
+        let data = { materias: [] };
+        let selectedTopicId = null;
+        let editingContext = null;
+        let expandedMaterias = new Set();
+        let expandedTopics = new Set();
+        let searchQuery = '';
+        let toastTimer = null;
+        let firebaseLoaded = false;
+
+        // Referencia a la base de datos
+        const dataRef = ref(db, '/');
+
+        // ============ Firebase: cargar y sincronizar ============
+        function initFirebaseListener() {
+            onValue(dataRef, (snapshot) => {
+                const val = snapshot.val();
+                if (val && val.materias) {
+                    data = val;
+                } else {
+                    // Si no hay datos, inicializamos vacío
+                    data = { materias: [] };
+                }
+                if (!firebaseLoaded) {
+                    firebaseLoaded = true;
+                    // Primera carga: expandir materias si son pocas, seleccionar primer tema
+                    if (data.materias.length <= 5) {
+                        data.materias.forEach(m => expandedMaterias.add(m.id));
+                    }
+                    if (!selectedTopicId && data.materias.length > 0) {
+                        const first = data.materias[0];
+                        if (first.temas && first.temas.length > 0) {
+                            selectedTopicId = first.temas[0].id;
+                        }
+                    }
+                }
+                // Reexpander materias que estaban expandidas (por id)
+                // Mantener expandedMaterias y expandedTopics que aún existan
+                const validMaterias = new Set(data.materias.map(m => m.id));
+                expandedMaterias = new Set([...expandedMaterias].filter(id => validMaterias.has(id)));
+                // Validar selectedTopicId
+                if (selectedTopicId && !findTopicById(selectedTopicId)) {
+                    selectedTopicId = null;
+                }
+                renderAll();
+            }, (error) => {
+                console.error('Error al leer datos:', error);
+                showToast('⚠️ Error de conexión. Reintentando...');
+            });
+        }
+
+        function saveToFirebase() {
+            set(dataRef, data).catch(err => {
+                console.error('Error al guardar:', err);
+                showToast('⚠️ No se pudo guardar en la nube.');
+            });
+        }
+
+        // ============ Helpers ============
+        function showToast(msg) {
+            if (toastTimer) clearTimeout(toastTimer);
+            toast.textContent = msg;
+            toast.classList.add('show');
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+        }
+
+        function generateId() {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+            return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function findTopicById(topicId) {
+            for (let materia of data.materias) {
+                const result = findInTopics(materia.temas, topicId);
+                if (result) return { materia, topic: result.topic, parentChain: result.parentChain };
+            }
+            return null;
+        }
+
+        function findInTopics(topics, id, parentChain = []) {
+            if (!topics) return null;
+            for (let t of topics) {
+                if (t.id === id) return { topic: t, parentChain };
+                if (t.children && t.children.length) {
+                    const found = findInTopics(t.children, id, [...parentChain, t]);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
+        function getDepthInMateria(materiaId, topicId) {
+            const path = getTopicPath(materiaId, topicId);
+            return path.length;
+        }
+
+        function getTopicPath(materiaId, topicId) {
+            const path = [];
+            const materia = data.materias.find(m => m.id === materiaId);
+            if (!materia) return [];
+            function search(topics, ancestors) {
+                for (let t of topics) {
+                    const newAncestors = [...ancestors, t];
+                    if (t.id === topicId) { path.push(...newAncestors); return true; }
+                    if (t.children && t.children.length && search(t.children, newAncestors)) return true;
+                }
+                return false;
+            }
+            search(materia.temas, []);
+            return path;
+        }
+
+        function countAllTopics(topics) {
+            if (!topics) return 0;
+            let c = 0;
+            for (let t of topics) {
+                c++;
+                if (t.children) c += countAllTopics(t.children);
+            }
+            return c;
+        }
+
+        // ============ Markdown Parser (corregido para tablas con celdas vacías) ============
+        function parseMarkdown(text) {
+            if (!text) return '<p style="color:#9ca3af;font-style:italic;">Sin contenido.</p>';
+            const lines = text.split('\n');
+            const output = [];
+            let i = 0;
+            while (i < lines.length) {
+                const raw = lines[i];
+                const trimmed = raw.trim();
+                if (trimmed === '<aside>' || trimmed.startsWith('<aside>')) {
+                    const asideLines = [];
+                    i++;
+                    while (i < lines.length && lines[i].trim() !== '</aside>') {
+                        asideLines.push(lines[i]);
+                        i++;
+                    }
+                    i++; // saltar </aside>
+                    const inner = asideLines.join('\n');
+                    output.push('<div class="aside-block"><div class="aside-badge">📖 NOTA</div>' + parseInlineMarkdown(escapeHTML(inner)) + '</div>');
+                    continue;
+                }
+                if (trimmed.startsWith('#')) {
+                    const level = trimmed.match(/^#+/)[0].length;
+                    const content = trimmed.replace(/^#+\s*/, '');
+                    if (level === 1) output.push('<h1>' + parseInlineMarkdown(escapeHTML(content)) + '</h1>');
+                    else if (level === 2) output.push('<h2>' + parseInlineMarkdown(escapeHTML(content)) + '</h2>');
+                    else output.push('<h3>' + parseInlineMarkdown(escapeHTML(content)) + '</h3>');
+                    i++;
+                    continue;
+                }
+                if (trimmed.startsWith('---') || trimmed.startsWith('***') || trimmed.startsWith('___')) {
+                    output.push('<hr>');
+                    i++;
+                    continue;
+                }
+                // Tabla: detectar filas que empiezan y terminan con |
+                if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+                    const tableRows = [];
+                    while (i < lines.length && lines[i].trim().startsWith('|') && lines[i].trim().endsWith('|')) {
+                        tableRows.push(lines[i].trim());
+                        i++;
+                    }
+                    output.push(parseTable(tableRows));
+                    continue;
+                }
+                if (/^[\-\*]\s/.test(trimmed)) {
+                    const listItems = [];
+                    while (i < lines.length && /^[\-\*]\s/.test(lines[i].trim())) {
+                        listItems.push('<li>' + parseInlineMarkdown(escapeHTML(lines[i].trim().replace(/^[\-\*]\s/, ''))) + '</li>');
+                        i++;
+                    }
+                    output.push('<ul>' + listItems.join('') + '</ul>');
+                    continue;
+                }
+                if (/^\d+\.\s/.test(trimmed)) {
+                    const listItems = [];
+                    while (i < lines.length && /^\d+\.\s/.test(lines[i].trim())) {
+                        listItems.push('<li>' + parseInlineMarkdown(escapeHTML(lines[i].trim().replace(/^\d+\.\s/, ''))) + '</li>');
+                        i++;
+                    }
+                    output.push('<ol>' + listItems.join('') + '</ol>');
+                    continue;
+                }
+                if (trimmed === '') { i++; continue; }
+                // Párrafo
+                const paraLines = [];
+                while (i < lines.length && lines[i].trim() !== '' && !lines[i].trim().startsWith('#') && !lines[i].trim().startsWith('---') && !lines[i].trim().startsWith('|') && !/^[\-\*]\s/.test(lines[i].trim()) && !/^\d+\.\s/.test(lines[i].trim()) && lines[i].trim() !== '<aside>' && !lines[i].trim().startsWith('<aside>')) {
+                    paraLines.push(lines[i].trim());
+                    i++;
+                }
+                if (paraLines.length > 0) {
+                    output.push('<p>' + parseInlineMarkdown(escapeHTML(paraLines.join('<br>'))) + '</p>');
+                }
+            }
+            return output.join('\n') || '<p style="color:#9ca3af;font-style:italic;">Sin contenido.</p>';
+        }
+
+        function parseTable(rows) {
+            if (rows.length < 2) return '';
+            // Filtrar filas que son separadores (solo contienen |, -, :, espacios)
+            const isSeparator = (row) => /^[\|\s\-:]+$/.test(row);
+            const dataRows = rows.filter(r => !isSeparator(r));
+            if (dataRows.length === 0) return '';
+
+            const headerRow = dataRows[0];
+            const bodyRows = dataRows.slice(1);
+
+            const splitCells = (row) => {
+                // Dividir por |, quitando el primer y último elemento vacío si existe
+                const parts = row.split('|');
+                // El split de "| a | b |" da ["", " a ", " b ", ""]
+                if (parts.length > 0 && parts[0].trim() === '') parts.shift();
+                if (parts.length > 0 && parts[parts.length-1].trim() === '') parts.pop();
+                return parts.map(c => c.trim());
+            };
+
+            const headerCells = splitCells(headerRow);
+            let html = '<table><thead><tr>';
+            headerCells.forEach(cell => {
+                html += '<th>' + parseInlineMarkdown(escapeHTML(cell)) + '</th>';
+            });
+            html += '</tr></thead><tbody>';
+
+            bodyRows.forEach(row => {
+                const cells = splitCells(row);
+                html += '<tr>';
+                cells.forEach(cell => {
+                    html += '<td>' + parseInlineMarkdown(escapeHTML(cell)) + '</td>';
+                });
+                // Si hay menos celdas que encabezados, rellenamos con celdas vacías
+                for (let j = cells.length; j < headerCells.length; j++) {
+                    html += '<td></td>';
+                }
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            return html;
+        }
+
+        function parseInlineMarkdown(text) {
+            text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+            text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+            return text;
+        }
+
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ============ Renderizado ============
+        function renderAll() {
+            renderSidebar();
+            renderMainPanel();
+        }
+
+        function renderSidebar() {
+            sidebarNav.innerHTML = '';
+            if (searchQuery.trim()) { renderSearchResults(); return; }
+            if (data.materias.length === 0) {
+                sidebarNav.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-tertiary);font-size:0.8rem;">📭 Sin materias aún</div>`;
+                return;
+            }
+            data.materias.forEach(materia => {
+                const group = document.createElement('div');
+                group.className = 'materia-group';
+                const isExpanded = expandedMaterias.has(materia.id);
+                const header = document.createElement('div');
+                header.className = 'materia-header' + (isExpanded ? ' expanded' : '');
+                header.innerHTML = `
+                    <span class="chevron">▶</span>
+                    <span class="materia-name">${escapeHTML(materia.nombre)}</span>
+                    <span class="materia-count">${countAllTopics(materia.temas)}</span>
+                    <span class="materia-actions">
+                        <button class="btn-icon-sm" data-action="add-root-topic" data-materia-id="${materia.id}" title="Añadir tema raíz">＋</button>
+                        <button class="btn-icon-sm" data-action="rename-materia" data-materia-id="${materia.id}" title="Renombrar">✎</button>
+                        <button class="btn-icon-sm danger" data-action="delete-materia" data-materia-id="${materia.id}" title="Eliminar">✕</button>
+                    </span>
+                `;
+                header.addEventListener('click', function(e) {
+                    if (e.target.closest('[data-action]')) return;
+                    toggleMateriaExpand(materia.id);
+                });
+                group.appendChild(header);
+
+                const treeContainer = document.createElement('div');
+                treeContainer.className = 'topic-tree' + (isExpanded ? ' open' : '');
+                renderTopicTree(treeContainer, materia.temas, materia.id, 0);
+                group.appendChild(treeContainer);
+                sidebarNav.appendChild(group);
+            });
+            attachSidebarActions();
+        }
+
+        function renderTopicTree(container, topics, materiaId, depth) {
+            if (!topics) return;
+            topics.forEach(topic => {
+                const isExpanded = expandedTopics.has(topic.id);
+                const node = document.createElement('div');
+                node.className = 'topic-node' + (selectedTopicId === topic.id ? ' active' : '');
+                node.style.paddingLeft = (depth * 16 + 8) + 'px';
+                const hasChildren = topic.children && topic.children.length > 0;
+                node.innerHTML = `
+                    <span class="node-dot"></span>
+                    <span class="node-title">${escapeHTML(topic.titulo || 'Sin título')}</span>
+                    <span class="node-actions">
+                        ${depth < MAX_DEPTH-1 ? `<button class="btn-icon-sm" data-action="add-subtopic" data-materia-id="${materiaId}" data-parent-id="${topic.id}" title="Añadir subtema">＋</button>` : ''}
+                        <button class="btn-icon-sm" data-action="delete-topic" data-topic-id="${topic.id}" title="Eliminar">✕</button>
+                    </span>
+                `;
+                if (hasChildren) {
+                    const expandArrow = document.createElement('span');
+                    expandArrow.className = 'chevron';
+                    expandArrow.style.fontSize = '0.55rem';
+                    expandArrow.style.marginRight = '4px';
+                    expandArrow.textContent = isExpanded ? '▼' : '▶';
+                    expandArrow.style.cursor = 'pointer';
+                    expandArrow.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleTopicExpand(topic.id);
+                    });
+                    node.prepend(expandArrow);
+                }
+                node.addEventListener('click', function(e) {
+                    if (e.target.closest('[data-action]')) return;
+                    openTopicForReading(topic.id);
+                });
+                container.appendChild(node);
+
+                if (hasChildren) {
+                    const childContainer = document.createElement('div');
+                    childContainer.className = 'topic-tree' + (isExpanded ? ' open' : '');
+                    renderTopicTree(childContainer, topic.children, materiaId, depth + 1);
+                    container.appendChild(childContainer);
+                }
+            });
+        }
+
+        function attachSidebarActions() {
+            sidebarNav.querySelectorAll('[data-action]').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const action = this.dataset.action;
+                    if (action === 'add-root-topic') startCreateTopic(this.dataset.materiaId, null);
+                    else if (action === 'rename-materia') renameMateria(this.dataset.materiaId);
+                    else if (action === 'delete-materia') deleteMateria(this.dataset.materiaId);
+                    else if (action === 'add-subtopic') startCreateTopic(this.dataset.materiaId, this.dataset.parentId);
+                    else if (action === 'delete-topic') deleteTopic(this.dataset.topicId);
+                });
+            });
+        }
+
+        function renderSearchResults() {
+            const q = searchQuery.trim().toLowerCase();
+            const results = [];
+            data.materias.forEach(materia => {
+                searchInTopics(materia.temas, materia, q, results);
+                if (materia.nombre.toLowerCase().includes(q)) {
+                    materia.temas.forEach(t => addUniqueResult(results, { materia, topic: t }));
+                }
+            });
+            if (results.length === 0) {
+                sidebarNav.innerHTML = `<div style="padding:16px;color:var(--text-tertiary);">🔍 Sin resultados para "${escapeHTML(q)}"</div>`;
+                return;
+            }
+            const header = document.createElement('div');
+            header.className = 'search-results-header';
+            header.textContent = `Resultados (${results.length})`;
+            sidebarNav.appendChild(header);
+            results.forEach(r => {
+                const item = document.createElement('div');
+                item.className = 'topic-node';
+                item.style.paddingLeft = '20px';
+                item.innerHTML = `<span class="node-dot"></span><span class="node-title">📁 ${escapeHTML(r.materia.nombre)} › ${escapeHTML(r.topic.titulo || 'Sin título')}</span>`;
+                item.addEventListener('click', () => openTopicForReading(r.topic.id));
+                sidebarNav.appendChild(item);
+            });
+        }
+
+        function searchInTopics(topics, materia, q, results) {
+            if (!topics) return;
+            for (let t of topics) {
+                if (t.titulo.toLowerCase().includes(q) || (t.contenido||'').toLowerCase().includes(q)) addUniqueResult(results, { materia, topic: t });
+                if (t.children) searchInTopics(t.children, materia, q, results);
+            }
+        }
+        function addUniqueResult(results, newItem) {
+            if (!results.some(r => r.topic.id === newItem.topic.id)) results.push(newItem);
+        }
+
+        function toggleMateriaExpand(id) {
+            if (expandedMaterias.has(id)) expandedMaterias.delete(id);
+            else expandedMaterias.add(id);
+            renderSidebar();
+        }
+        function toggleTopicExpand(topicId) {
+            if (expandedTopics.has(topicId)) expandedTopics.delete(topicId);
+            else expandedTopics.add(topicId);
+            renderSidebar();
+        }
+
+        function renderMainPanel() {
+            if (editingContext) { renderEditor(); return; }
+            if (selectedTopicId) {
+                const info = findTopicById(selectedTopicId);
+                if (info) { renderReadingView(info.materia, info.topic, info.parentChain); return; }
+                selectedTopicId = null;
+            }
+            renderWelcome();
+        }
+
+        function renderWelcome() {
+            mainContent.innerHTML = `<div class="welcome-state"><div class="welcome-icon">📚</div><h3>Workspace Jurídico</h3><p>Selecciona un tema o crea una nueva materia.</p></div>`;
+            breadcrumb.textContent = 'Selecciona un tema';
+            toolbarActions.innerHTML = '';
+        }
+
+        function renderReadingView(materia, topic, parentChain) {
+            const html = parseMarkdown(topic.contenido || '');
+            mainContent.innerHTML = `
+                <div class="reading-container">
+                    <h1 class="tema-title-display">${escapeHTML(topic.titulo || 'Sin título')}</h1>
+                    <div class="tema-meta">📅 ${formatDate(topic.fechaModificacion || topic.fechaCreacion)} · ${buildBreadcrumbText(materia, parentChain)}</div>
+                    <div class="tema-body-rendered">${html}</div>
+                </div>`;
+            breadcrumb.innerHTML = buildBreadcrumbHTML(materia, parentChain, topic);
+            toolbarActions.innerHTML = `
+                <button class="btn btn-outline" id="btnEdit">✎ Editar</button>
+                <button class="btn btn-danger-outline" id="btnDelete">🗑 Eliminar</button>`;
+            document.getElementById('btnEdit').addEventListener('click', () => startEditTopic(topic.id));
+            document.getElementById('btnDelete').addEventListener('click', () => deleteTopic(topic.id));
+        }
+
+        function buildBreadcrumbText(materia, parentChain) {
+            let str = materia.nombre;
+            parentChain.forEach(t => str += ' › ' + (t.titulo || 'Sin título'));
+            return str;
+        }
+
+        function buildBreadcrumbHTML(materia, parentChain, currentTopic) {
+            let html = `📁 <strong>${escapeHTML(materia.nombre)}</strong>`;
+            parentChain.forEach(t => html += ` › ${escapeHTML(t.titulo || 'Sin título')}`);
+            if (currentTopic) html += ` › <strong>${escapeHTML(currentTopic.titulo || 'Sin título')}</strong>`;
+            return html;
+        }
+
+        function formatDate(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            return d.toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+        }
+
+        // ============ Editor ============
+        function renderEditor() {
+            const ctx = editingContext;
+            const materia = data.materias.find(m => m.id === ctx.materiaId);
+            if (!materia) { editingContext = null; renderAll(); return; }
+            let titulo = '', contenido = '', breadPath = '';
+            if (ctx.topicId) {
+                const info = findTopicById(ctx.topicId);
+                if (info) {
+                    titulo = info.topic.titulo || '';
+                    contenido = info.topic.contenido || '';
+                    breadPath = buildBreadcrumbHTML(materia, info.parentChain, info.topic);
+                }
+            } else {
+                const parentChain = ctx.parentTopicId ? getTopicPath(ctx.materiaId, ctx.parentTopicId) : [];
+                breadPath = `📁 <strong>${escapeHTML(materia.nombre)}</strong>` + (parentChain.map(t => ` › ${escapeHTML(t.titulo||'Sin título')}`).join('')) + ` › <em>Nuevo tema</em>`;
+            }
+            mainContent.innerHTML = `
+                <div class="editor-container">
+                    <label for="editorTitulo">Título del tema</label>
+                    <input type="text" id="editorTitulo" value="${escapeHTML(titulo)}" placeholder="Ej: Artículo 14...">
+                    <label for="editorContenido">Contenido (Markdown)</label>
+                    <textarea id="editorContenido" class="editor-textarea" placeholder="Escribe aquí usando formato Markdown...">${escapeHTML(contenido)}</textarea>
+                    <div class="formatting-help">
+                        💡 <strong>Formato:</strong> Usa <span>**negrita**</span>, <span>*itálica*</span>, <span>[enlace](url)</span>, <span># Encabezados</span>, <span>&lt;aside&gt;...&lt;/aside&gt;</span> para bloques, <span>| Tablas |</span>, <span>- listas</span>. Ctrl+S para guardar.
+                    </div>
+                    <div class="editor-actions">
+                        <button class="btn btn-outline" id="btnCancel">Cancelar</button>
+                        <button class="btn btn-primary" id="btnSave">💾 Guardar</button>
+                    </div>
+                </div>`;
+            breadcrumb.innerHTML = breadPath;
+            toolbarActions.innerHTML = '';
+            document.getElementById('btnCancel').addEventListener('click', cancelEdit);
+            document.getElementById('btnSave').addEventListener('click', saveEdit);
+            document.getElementById('editorTitulo').focus();
+            document.addEventListener('keydown', function escapeHandler(e) {
+                if (e.key === 'Escape') { cancelEdit(); document.removeEventListener('keydown', escapeHandler); }
+            });
+        }
+
+        function startCreateTopic(materiaId, parentTopicId) {
+            const depth = parentTopicId ? getDepthInMateria(materiaId, parentTopicId) + 1 : 1;
+            if (depth > MAX_DEPTH) { showToast('⚠️ Máximo 4 niveles de subtemas.'); return; }
+            if (!expandedMaterias.has(materiaId)) expandedMaterias.add(materiaId);
+            editingContext = { materiaId, parentTopicId: parentTopicId || null, topicId: null };
+            selectedTopicId = null;
+            searchQuery = ''; searchInput.value = '';
+            renderAll();
+        }
+
+        function startEditTopic(topicId) {
+            const info = findTopicById(topicId);
+            if (!info) return;
+            editingContext = { materiaId: info.materia.id, parentTopicId: info.parentChain.length ? info.parentChain[info.parentChain.length-1].id : null, topicId };
+            selectedTopicId = null;
+            renderAll();
+        }
+
+        function cancelEdit() {
+            const prevTopic = editingContext?.topicId || null;
+            editingContext = null;
+            selectedTopicId = prevTopic;
+            renderAll();
+        }
+
+        function saveEdit() {
+            const titulo = document.getElementById('editorTitulo')?.value.trim();
+            const contenido = document.getElementById('editorContenido')?.value || '';
+            if (!titulo) { showToast('⚠️ Ingresa un título.'); return; }
+            const ctx = editingContext;
+            if (!ctx) return;
+            const materia = data.materias.find(m => m.id === ctx.materiaId);
+            if (!materia) return;
+            const now = new Date().toISOString();
+            if (ctx.topicId) {
+                const info = findTopicById(ctx.topicId);
+                if (info) {
+                    info.topic.titulo = titulo;
+                    info.topic.contenido = contenido;
+                    info.topic.fechaModificacion = now;
+                }
+            } else {
+                const newTopic = { id: generateId(), titulo, contenido, children: [], fechaCreacion: now, fechaModificacion: now };
+                if (ctx.parentTopicId) {
+                    const parent = findTopicById(ctx.parentTopicId);
+                    if (parent && parent.topic) {
+                        parent.topic.children = parent.topic.children || [];
+                        parent.topic.children.push(newTopic);
+                        ctx.topicId = newTopic.id;
+                    }
+                } else {
+                    materia.temas = materia.temas || [];
+                    materia.temas.push(newTopic);
+                    ctx.topicId = newTopic.id;
+                }
+            }
+            saveToFirebase();
+            const savedId = ctx.topicId;
+            editingContext = null;
+            selectedTopicId = savedId;
+            renderAll();
+            showToast('✅ Tema guardado.');
+        }
+
+        function deleteTopic(topicId) {
+            const info = findTopicById(topicId);
+            if (!info) return;
+            if (!confirm(`¿Eliminar "${info.topic.titulo}" y todos sus subtemas?`)) return;
+            const materia = info.materia;
+            if (info.parentChain.length === 0) {
+                materia.temas = materia.temas.filter(t => t.id !== topicId);
+            } else {
+                const parent = info.parentChain[info.parentChain.length-1];
+                parent.children = parent.children.filter(t => t.id !== topicId);
+            }
+            if (selectedTopicId === topicId) selectedTopicId = null;
+            if (editingContext?.topicId === topicId) editingContext = null;
+            saveToFirebase();
+            renderAll();
+            showToast('🗑 Tema eliminado.');
+        }
+
+        function deleteMateria(materiaId) {
+            const materia = data.materias.find(m => m.id === materiaId);
+            if (!materia) return;
+            if (!confirm(`¿Eliminar materia "${materia.nombre}" y todos sus temas?`)) return;
+            data.materias = data.materias.filter(m => m.id !== materiaId);
+            expandedMaterias.delete(materiaId);
+            if (selectedTopicId && findTopicById(selectedTopicId)?.materia.id === materiaId) selectedTopicId = null;
+            if (editingContext?.materiaId === materiaId) editingContext = null;
+            saveToFirebase();
+            renderAll();
+            showToast('🗑 Materia eliminada.');
+        }
+
+        function renameMateria(materiaId) {
+            const materia = data.materias.find(m => m.id === materiaId);
+            if (!materia) return;
+            const newName = prompt('Nuevo nombre:', materia.nombre);
+            if (newName && newName.trim()) {
+                materia.nombre = newName.trim();
+                saveToFirebase();
+                renderAll();
+                showToast('✏️ Materia renombrada.');
+            }
+        }
+
+        function openTopicForReading(topicId) {
+            selectedTopicId = topicId;
+            editingContext = null;
+            searchQuery = ''; searchInput.value = '';
+            renderAll();
+        }
+
+        btnAddMateria.addEventListener('click', () => {
+            const name = prompt('Nombre de la nueva materia:');
+            if (name && name.trim()) {
+                const newMateria = { id: generateId(), nombre: name.trim(), temas: [] };
+                data.materias.push(newMateria);
+                expandedMaterias.add(newMateria.id);
+                saveToFirebase();
+                renderAll();
+            }
+        });
+
+        searchInput.addEventListener('input', function() {
+            searchQuery = this.value;
+            renderSidebar();
+            if (!searchQuery.trim() && selectedTopicId) renderMainPanel();
+            if (!searchQuery.trim() && !selectedTopicId && !editingContext) renderWelcome();
+        });
+
+        // Iniciar todo
+        initFirebaseListener();
+    </script>
+</body>
+</html>
