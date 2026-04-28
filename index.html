@@ -846,7 +846,7 @@
                 header.className = 'materia-header' + (isExpanded ? ' expanded' : '');
                 header.innerHTML = `
                     <span class="chevron">▶</span>
-                    <span class="materia-name">${escapeHTML(materia.nombre)}</span>
+                    <span class="materia-name" title="${escapeHTML(materia.nombre)}">${escapeHTML(materia.nombre)}</span>
                     <span class="materia-count">${countAllTopics(materia.temas)}</span>
                     <span class="materia-actions">
                         <button class="btn-icon-sm" data-action="add-root-topic" data-materia-id="${materia.id}" title="Añadir tema raíz">＋</button>
@@ -879,7 +879,7 @@
                 const hasChildren = topic.children && topic.children.length > 0;
                 node.innerHTML = `
                     <span class="node-dot"></span>
-                    <span class="node-title">${escapeHTML(topic.titulo || 'Sin título')}</span>
+                    <span class="node-title" title="${escapeHTML(topic.titulo || 'Sin título')}">${escapeHTML(topic.titulo || 'Sin título')}</span>
                     <span class="node-actions">
                         ${depth < MAX_DEPTH-1 ? `<button class="btn-icon-sm" data-action="add-subtopic" data-materia-id="${materiaId}" data-parent-id="${topic.id}" title="Añadir subtema">＋</button>` : ''}
                         <button class="btn-icon-sm" data-action="delete-topic" data-topic-id="${topic.id}" title="Eliminar">✕</button>
@@ -948,7 +948,7 @@
                 const item = document.createElement('div');
                 item.className = 'topic-node';
                 item.style.paddingLeft = '20px';
-                item.innerHTML = `<span class="node-dot"></span><span class="node-title">📁 ${escapeHTML(r.materia.nombre)} › ${escapeHTML(r.topic.titulo || 'Sin título')}</span>`;
+                item.innerHTML = `<span class="node-dot"></span><span class="node-title" title="${escapeHTML(r.materia.nombre)} › ${escapeHTML(r.topic.titulo || 'Sin título')}">📁 ${escapeHTML(r.materia.nombre)} › ${escapeHTML(r.topic.titulo || 'Sin título')}</span>`;
                 item.addEventListener('click', () => openTopicForReading(r.topic.id));
                 sidebarNav.appendChild(item);
             });
